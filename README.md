@@ -13,6 +13,7 @@ Choose a course card and mark the next lesson complete. Add a course with its ti
 ## Features
 
 - Course progress cards with lesson totals and completion percentages
+- Remaining lesson count across the course shelf
 - Search by course title or provider
 - Add a course to the local shelf
 - Mark lessons complete with progress capped at the course total

@@ -8,8 +8,27 @@ const starterCourses = [
     { id: "javascript", title: "JavaScript, step by step", source: "Open Learning", done: 11, total: 24, color: "blue" },
     { id: "writing", title: "Writing for the web", source: "Fieldnotes", done: 7, total: 12, color: "green" },
 ];
+const courseColors = new Set(["orange", "blue", "green"]);
+const sanitizeCourses = (value) => {
+    if (!Array.isArray(value)) return starterCourses;
+    const ids = new Set();
+    return value.flatMap((course) => {
+        if (!course || typeof course.id !== "string" || typeof course.title !== "string" || typeof course.source !== "string") return [];
+        const id = course.id.trim();
+        const title = course.title.trim();
+        const source = course.source.trim();
+        const total = Number(course.total);
+        const done = Number(course.done);
+        if (!id || !title || !source || ids.has(id) || !Number.isInteger(total) || total < 1 || !Number.isInteger(done) || done < 0) return [];
+        ids.add(id);
+        return [{ ...course, id, title, source, total, done: Math.min(done, total), color: courseColors.has(course.color) ? course.color : "blue" }];
+    });
+};
 const readCourses = () => {
-    try { return JSON.parse(localStorage.getItem("coursebook-courses")) || starterCourses; }
+    try {
+        const saved = localStorage.getItem("coursebook-courses");
+        return saved === null ? starterCourses : sanitizeCourses(JSON.parse(saved));
+    }
     catch { return starterCourses; }
 };
 const CourseProgressTracker = () => {
@@ -18,9 +37,13 @@ const CourseProgressTracker = () => {
     const [title, setTitle] = useState("");
     const [source, setSource] = useState("");
     const [pendingDelete, setPendingDelete] = useState(null);
-    useEffect(() => localStorage.setItem("coursebook-courses", JSON.stringify(courses)), [courses]);
+    useEffect(() => {
+        try { localStorage.setItem("coursebook-courses", JSON.stringify(courses)); }
+        catch { /* Browser storage may be unavailable. */ }
+    }, [courses]);
     const filtered = useMemo(() => courses.filter((course) => (course.title + " " + course.source).toLowerCase().includes(query.toLowerCase())), [courses, query]);
     const completed = courses.filter((course) => course.done >= course.total).length;
+    const remainingLessons = courses.reduce((sum, course) => sum + Math.max(0, course.total - course.done), 0);
     const addCourse = (event) => {
         event.preventDefault();
         if (!title.trim() || !source.trim()) return;
@@ -37,7 +60,7 @@ const CourseProgressTracker = () => {
                 <article><span>Courses on your shelf</span><strong>{courses.length.toString().padStart(2, "0")}</strong></article>
                 <article><span>Lessons completed</span><strong>{courses.reduce((sum, course) => sum + course.done, 0)}</strong></article>
                 <article><span>Finished courses</span><strong>{completed}</strong></article>
-                <article className={styles.goal}><FiClock /><span>This week</span><strong>3 lessons to go</strong></article>
+                <article className={styles.goal}><FiClock /><span>Lessons remaining</span><strong>{remainingLessons}</strong></article>
             </div>
             <div className={styles.workspace} id="workspace">
                 <div className={styles.sectionHead}><div><p className={styles.label}>YOUR COURSE SHELF</p><h2>Continue learning</h2></div><label className={styles.search}><span className={styles.visuallyHidden}>Search courses</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search courses" /></label></div>
@@ -48,7 +71,7 @@ const CourseProgressTracker = () => {
                             <div className={styles.cardTop}><span className={styles.courseIcon}><FiBookOpen /></span><button className={styles.deleteButton} type="button" aria-label={"Remove " + course.title} onClick={() => setPendingDelete(course)}><FiTrash2 /></button></div>
                             <p className={styles.source}>{course.source}</p><h3>{course.title}</h3>
                             <div className={styles.progressMeta}><span>{course.done} of {course.total} lessons</span><strong>{percent}%</strong></div>
-                            <div className={styles.progressTrack} role="progressbar" aria-valuenow={percent} aria-valuemin="0" aria-valuemax="100"><span style={{ width: String(percent) + "%" }} /></div>
+                            <div className={styles.progressTrack} role="progressbar" aria-label={`Progress for ${course.title}`} aria-valuenow={percent} aria-valuemin="0" aria-valuemax="100"><span style={{ width: String(percent) + "%" }} /></div>
                             <button className={styles.continueButton} type="button" disabled={percent >= 100} onClick={() => setCourses((items) => items.map((item) => item.id === course.id ? { ...item, done: Math.min(item.total, item.done + 1) } : item))}>{percent >= 100 ? <><FiCheck /> Course complete</> : <>Mark next lesson done <FiArrowUpRight /></>}</button>
                         </article>;
                     })}
