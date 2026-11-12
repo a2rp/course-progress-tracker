@@ -36,19 +36,20 @@ const CourseProgressTracker = () => {
     const [query, setQuery] = useState("");
     const [title, setTitle] = useState("");
     const [source, setSource] = useState("");
+    const [formError, setFormError] = useState("");
     const [pendingDelete, setPendingDelete] = useState(null);
     useEffect(() => {
         try { localStorage.setItem("coursebook-courses", JSON.stringify(courses)); }
         catch { /* Browser storage may be unavailable. */ }
     }, [courses]);
-    const filtered = useMemo(() => courses.filter((course) => (course.title + " " + course.source).toLowerCase().includes(query.toLowerCase())), [courses, query]);
+    const filtered = useMemo(() => courses.filter((course) => (course.title + " " + course.source).toLowerCase().includes(query.trim().toLowerCase())), [courses, query]);
     const completed = courses.filter((course) => course.done >= course.total).length;
     const remainingLessons = courses.reduce((sum, course) => sum + Math.max(0, course.total - course.done), 0);
     const addCourse = (event) => {
         event.preventDefault();
-        if (!title.trim() || !source.trim()) return;
+        if (!title.trim() || !source.trim()) { setFormError("Enter both a course title and provider."); return; }
         setCourses((items) => [{ id: crypto.randomUUID(), title: title.trim(), source: source.trim(), done: 0, total: 10, color: "blue" }, ...items]);
-        setTitle(""); setSource("");
+        setTitle(""); setSource(""); setFormError("");
     };
     return (
         <section className={styles.courseProgressTracker} id="dashboard">
@@ -79,8 +80,9 @@ const CourseProgressTracker = () => {
                 </div>
                 <form className={styles.addForm} onSubmit={addCourse}>
                     <div className={styles.addIntro}><span><FiPlus /></span><div><h2>Add a course</h2><p>Start a new learning path on your shelf.</p></div></div>
-                    <label>Course title<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Intro to data science" required /></label>
-                    <label>Provider<input value={source} onChange={(event) => setSource(event.target.value)} placeholder="e.g. Open Learning" required /></label>
+                    <label>Course title<input value={title} onChange={(event) => { setTitle(event.target.value); setFormError(""); }} placeholder="e.g. Intro to data science" required /></label>
+                    <label>Provider<input value={source} onChange={(event) => { setSource(event.target.value); setFormError(""); }} placeholder="e.g. Open Learning" required /></label>
+                    {formError && <p className={styles.formError} role="alert">{formError}</p>}
                     <button type="submit">Add course <FiPlus /></button>
                 </form>
             </div>

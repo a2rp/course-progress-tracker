@@ -38,6 +38,7 @@
         input { width:100%; min-width:0; padding:10px 11px; border:1px solid var(--line); border-radius:9px; background:var(--paper); outline:none; font-size:12px; }
         button { min-height:40px; display:flex; align-items:center; gap:8px; padding:0 14px; border:0; border-radius:9px; background:var(--ink); color:var(--paper); font-size:12px; font-weight:700; }
     }
+    .formError { grid-column:1/-1; color:#bd4d37; font-size:12px; }
     .addIntro { display:flex; align-items:center; gap:10px; align-self:center; h2 { font-size:15px; font-weight:750; } p { color:var(--muted); font-size:11px; } span { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:white; background:var(--accent); } }
     .visuallyHidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     @media(max-width:900px) { .stats { grid-template-columns:repeat(2,1fr); } .courseGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .addForm { grid-template-columns:1fr 1fr; } .addIntro { grid-column:1/-1; } }
